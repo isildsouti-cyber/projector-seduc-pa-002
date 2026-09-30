@@ -845,21 +845,38 @@ h2.tituloPagina span { border-bottom:0 !important; text-indent:0 !important; pad
 <div class="fgv-field">
 <label><span class="error">*</span> Selecione o estado para a realização da prova:</label>
 <select class="select" data-testid="select-uf-prova" id="UF_PROVA" name="UF_PROVA" required="">
-<option value="TO" selected="">Tocantins / TO</option>
+<option value="PA" selected="">Pará / PA</option>
 </select>
 </div>
 <div class="fgv-field">
 <label><span class="error">*</span> Selecione o município para a realização da prova:</label>
 <select class="select" data-testid="select-municipio-prova" id="MUNICIPIO_PROVA" name="MUNICIPIO_PROVA" required="">
 <option value="" selected="">Escolher o município</option>
-<option value="Araguaína / TO">Araguaína / TO</option>
-<option value="Araguatins / TO">Araguatins / TO</option>
-<option value="Arraias / TO">Arraias / TO</option>
-<option value="Dianópolis / TO">Dianópolis / TO</option>
-<option value="Gurupi / TO">Gurupi / TO</option>
-<option value="Palmas / TO">Palmas / TO</option>
-<option value="Paraíso do Tocantins / TO">Paraíso do Tocantins / TO</option>
-<option value="Porto Nacional / TO">Porto Nacional / TO</option>
+<option value="PA - Abaetetuba">PA - Abaetetuba</option>
+<option value="PA - Afuá">PA - Afuá</option>
+<option value="PA - Altamira">PA - Altamira</option>
+<option value="PA - Belém">PA - Belém</option>
+<option value="PA - Bragança">PA - Bragança</option>
+<option value="PA - Breves">PA - Breves</option>
+<option value="PA - Cachoeira do Arari">PA - Cachoeira do Arari</option>
+<option value="PA - Cametá">PA - Cametá</option>
+<option value="PA - Capanema">PA - Capanema</option>
+<option value="PA - Capitão Poço">PA - Capitão Poço</option>
+<option value="PA - Castanhal">PA - Castanhal</option>
+<option value="PA - Curralinho">PA - Curralinho</option>
+<option value="PA - Igarapé-Açu">PA - Igarapé-Açu</option>
+<option value="PA - Itaituba">PA - Itaituba</option>
+<option value="PA - Marabá">PA - Marabá</option>
+<option value="PA - Monte Alegre">PA - Monte Alegre</option>
+<option value="PA - Óbidos">PA - Óbidos</option>
+<option value="PA - Paragominas">PA - Paragominas</option>
+<option value="PA - Parauapebas">PA - Parauapebas</option>
+<option value="PA - Redenção">PA - Redenção</option>
+<option value="PA - Santa Izabel do Pará">PA - Santa Izabel do Pará</option>
+<option value="PA - Santarém">PA - Santarém</option>
+<option value="PA - Soure">PA - Soure</option>
+<option value="PA - Tucuruí">PA - Tucuruí</option>
+<option value="PA - Xinguara">PA - Xinguara</option>
 </select>
 </div>
 <div class="fgv-field">
@@ -889,8 +906,8 @@ h2.tituloPagina span { border-bottom:0 !important; text-indent:0 !important; pad
    var uf = document.getElementById('UF_PROVA');
    var mun = document.getElementById('MUNICIPIO_PROVA');
    if(!uf||!mun) return;
-   // Tocantins fixo: pre-seleciona TO (único estado do certame SES-TO)
-   if(uf.value !== 'TO'){ uf.value = 'TO'; }
+   // Pará fixo: pré-seleciona PA (único estado do certame)
+   if(uf.value !== 'PA'){ uf.value = 'PA'; }
  });
 })();
 </script>
