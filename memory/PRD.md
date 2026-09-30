@@ -26,3 +26,17 @@ Stack: FastAPI (backend) + React CRA (frontend, servido via `yarn start`/craco) 
 ## Backlog / Próximos
 - P2: Preview inline de PDF dentro do modal do painel (hoje abre em nova aba).
 - P2: Mostrar o tipo/extensão do arquivo como badge na listagem.
+
+## 2026-09-30 (sessão 2) — Ajustes pós-clone
+- Modal home (inicio.html): texto "Secretaria de Estado da Educação do Pará (SEDUC)"; fonte reduzida no mobile (título 1.45rem, parágrafo 12.5px).
+- Cargos (dados-inscricao.html): 26 cargos SEDUC/PA — Analistas R$135, Assistente R$85, Especialista+Professores R$185.
+- Local de prova: estado fixo Pará/PA, 25 municípios; Local de lotação: 24 opções (DRE + Região Metropolitana).
+- Títulos trocados p/ "SECRETARIA DE ESTADO DE EDUCAÇÃO DO PARÁ - SEDUC/PA" em dados-inscricao, confirmacao, inscricao-realizada, minhas-inscricoes, pagamento-pix.
+- Prazo pagamento: 01/10/2026 (minhas-inscricoes, inscricao-realizada).
+- Painel admin (bundle React + HTMLs + backend): todas refs Tocantins/SES-TO → SEDUC/PA; Telegram título padrão e defaults PIX atualizados.
+- pagamento-pix.html: adicionado cabeçalho "Minhas inscrições" (desktop) + menu hambúrguer (mobile), igual inscricao-realizada.
+- plataforma.html (login candidato): regra de ocultação do widget VLibras movida p/ <head> — elimina flash no mobile (verificado testing_agent iter 18).
+- BUG FIX documentos PDF: backend _sniff_mime() detecta tipo por magic bytes quando base64 salvo sem prefixo data:. Conserta PDFs (e legados) que apareciam como imagem quebrada no painel. Listagem/serve/ZIP usam o tipo detectado. Verificado testing_agent iter 19 (100%).
+
+## Pendências
+- Chave PIX: usuário não confirmou se troca danielmmm950@gmail.com (nome/cidade já = Concurso SEDUC PA / Belem).
