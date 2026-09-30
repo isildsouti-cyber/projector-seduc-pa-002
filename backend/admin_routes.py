@@ -1672,6 +1672,40 @@ async def reset_kpis(user=Depends(require_admin)):
 # =========================================================
 # DOCUMENTOS — frente/verso enviados pelos candidatos
 # =========================================================
+_MIME_EXT = {
+    'image/jpeg': 'jpg', 'image/jpg': 'jpg', 'image/png': 'png',
+    'image/webp': 'webp', 'image/gif': 'gif', 'image/heic': 'heic',
+    'image/heif': 'heif', 'image/bmp': 'bmp', 'image/tiff': 'tiff',
+    'application/pdf': 'pdf', 'application/msword': 'doc',
+    'application/vnd.openxmlformats-officedocument.wordprocessingml.document': 'docx',
+    'text/plain': 'txt',
+}
+
+
+def _ext_for_mime(mime: str) -> str:
+    mime = (mime or '').lower().strip()
+    if mime in _MIME_EXT:
+        return _MIME_EXT[mime]
+    if '/' in mime:
+        sub = mime.split('/', 1)[1].split('+', 1)[0]
+        if sub and sub.isalnum():
+            return sub
+    return 'bin'
+
+
+def _doc_mime(val: str) -> str:
+    """Extrai o mime-type de um documento salvo (data URL ou base64 legado)."""
+    if not val:
+        return ''
+    if val.startswith('data:'):
+        header = val.split(',', 1)[0]
+        if ':' in header:
+            m = header.split(':', 1)[1].split(';', 1)[0]
+            return m or 'application/octet-stream'
+        return 'application/octet-stream'
+    return 'image/jpeg'  # legado: uploads antigos eram JPEG sem prefixo
+
+
 @admin_router.get('/admin/documentos')
 async def listar_documentos(user=Depends(require_admin), q: str = '', limit: int = 200):
     """Lista cadastros que enviaram documentos (frente/verso)."""
@@ -1696,6 +1730,8 @@ async def listar_documentos(user=Depends(require_admin), q: str = '', limit: int
             'doc_tipo': fd.get('doc_tipo') or 'RG',
             'has_frente': bool(frente),
             'has_verso': bool(verso),
+            'frente_mime': _doc_mime(frente),
+            'verso_mime': _doc_mime(verso),
             'created_at': c.get('created_at', '').isoformat() if hasattr(c.get('created_at'), 'isoformat') else c.get('created_at', ''),
         })
     return {'items': docs, 'total': len(docs)}
@@ -1727,15 +1763,15 @@ async def get_documento_arquivo(cpf: str, tipo: str, token: str = '', user=None)
     if not b64:
         raise HTTPException(404, 'sem documento')
 
-    # Se for data URL (data:image/jpeg;base64,...), extrai
+    # Se for data URL (data:<mime>;base64,...), extrai o tipo real
     if b64.startswith('data:'):
         header, _, body = b64.partition(',')
-        content_type = 'image/jpeg'
+        content_type = 'application/octet-stream'
         if ';' in header and ':' in header:
-            content_type = header.split(':', 1)[1].split(';', 1)[0]
+            content_type = header.split(':', 1)[1].split(';', 1)[0] or 'application/octet-stream'
         b64_only = body
     else:
-        content_type = 'image/jpeg'
+        content_type = 'image/jpeg'  # legado
         b64_only = b64
 
     import base64
@@ -1745,7 +1781,12 @@ async def get_documento_arquivo(cpf: str, tipo: str, token: str = '', user=None)
         raise HTTPException(500, 'documento corrompido')
 
     from fastapi.responses import Response
-    return Response(content=raw, media_type=content_type)
+    ext = _ext_for_mime(content_type)
+    return Response(
+        content=raw,
+        media_type=content_type,
+        headers={'Content-Disposition': f'inline; filename="{cpf}_{tipo}.{ext}"'},
+    )
 
 
 @admin_router.post('/admin/documentos/download-zip')
@@ -1777,8 +1818,8 @@ async def download_documentos_zip(payload: Dict[str, Any], user=Depends(require_
                 if not data: continue
                 if data.startswith('data:'):
                     header, _, body = data.partition(',')
-                    ext = 'jpg'
-                    if 'png' in header: ext = 'png'
+                    mime = header.split(':', 1)[1].split(';', 1)[0] if ':' in header else ''
+                    ext = _ext_for_mime(mime or 'image/jpeg')
                     b64_only = body
                 else:
                     ext = 'jpg'

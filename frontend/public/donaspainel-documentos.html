@@ -129,13 +129,12 @@ function render(){
   }
   const rows = filtered.map(d => {
     const cs = selected.has(d.cpf) ? 'checked' : '';
-    const url = (tipo) => `${API}/api/admin/documentos/${encodeURIComponent(d.cpf)}/${tipo}?token=${encodeURIComponent(TOKEN)}`;
     return `<tr>
       <td><input type="checkbox" ${cs} onchange="toggleSel('${d.cpf}', this.checked)" data-testid="chk-${d.cpf}"></td>
       <td><strong>${escapeHtml(d.nome)}</strong><br><span style="color:#8a7fa3;font-size:11px">${escapeHtml(d.cpf)}</span></td>
       <td><span class="badge">${escapeHtml(d.doc_tipo)}</span></td>
-      <td>${d.has_frente ? `<img class="doc-thumb" src="${url('frente')}" onclick="verGrande(this.src)" alt="Frente">` : '<span class="doc-thumb empty">—</span>'}</td>
-      <td>${d.has_verso ? `<img class="doc-thumb" src="${url('verso')}" onclick="verGrande(this.src)" alt="Verso">` : '<span class="doc-thumb empty">—</span>'}</td>
+      <td>${docCell(d, 'frente')}</td>
+      <td>${docCell(d, 'verso')}</td>
     </tr>`;
   }).join('');
   el.innerHTML = `<table>
@@ -185,6 +184,20 @@ async function baixarZip(body){
     document.body.appendChild(a); a.click(); a.remove();
     URL.revokeObjectURL(url);
   }catch(e){ alert('Erro ao baixar: ' + e.message); }
+}
+
+function urlFor(cpf, tipo){ return `${API}/api/admin/documentos/${encodeURIComponent(cpf)}/${tipo}?token=${encodeURIComponent(TOKEN)}`; }
+
+function docCell(d, tipo){
+  const has = tipo === 'frente' ? d.has_frente : d.has_verso;
+  if(!has) return '<span class="doc-thumb empty">—</span>';
+  const mime = (tipo === 'frente' ? d.frente_mime : d.verso_mime) || '';
+  const src = urlFor(d.cpf, tipo);
+  if(mime.indexOf('image/') === 0){
+    return `<img class="doc-thumb" src="${src}" onclick="verGrande('${src}')" alt="${tipo}">`;
+  }
+  const label = mime === 'application/pdf' ? 'Ver PDF' : 'Ver arquivo';
+  return `<a class="doc-file-link" style="display:inline-block;padding:8px 14px;background:#6d28d9;color:#fff;border-radius:8px;font-size:12px;font-weight:600;text-decoration:none" href="${src}" target="_blank" rel="noopener" data-testid="file-link-${tipo}-${d.cpf}">${label}</a>`;
 }
 
 function verGrande(src){
