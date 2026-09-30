@@ -1693,8 +1693,34 @@ def _ext_for_mime(mime: str) -> str:
     return 'bin'
 
 
+def _sniff_mime(b64_body: str) -> str:
+    """Detecta o mime-type pelos bytes mágicos do conteúdo base64 (sem prefixo)."""
+    if not b64_body:
+        return ''
+    import base64 as _b64
+    try:
+        head = _b64.b64decode(b64_body[:32])[:12]
+    except Exception:
+        return ''
+    if head[:4] == b'%PDF':
+        return 'application/pdf'
+    if head[:8] == b'\x89PNG\r\n\x1a\n':
+        return 'image/png'
+    if head[:3] == b'\xff\xd8\xff':
+        return 'image/jpeg'
+    if head[:6] in (b'GIF87a', b'GIF89a'):
+        return 'image/gif'
+    if head[:4] == b'RIFF' and head[8:12] == b'WEBP':
+        return 'image/webp'
+    if head[:4] in (b'II*\x00', b'MM\x00*'):
+        return 'image/tiff'
+    if head[:5] == b'%!PS-':
+        return 'application/postscript'
+    return ''
+
+
 def _doc_mime(val: str) -> str:
-    """Extrai o mime-type de um documento salvo (data URL ou base64 legado)."""
+    """Extrai o mime-type de um documento salvo (data URL ou base64 sem prefixo)."""
     if not val:
         return ''
     if val.startswith('data:'):
@@ -1703,7 +1729,8 @@ def _doc_mime(val: str) -> str:
             m = header.split(':', 1)[1].split(';', 1)[0]
             return m or 'application/octet-stream'
         return 'application/octet-stream'
-    return 'image/jpeg'  # legado: uploads antigos eram JPEG sem prefixo
+    # Sem prefixo: detecta pelo conteúdo (magic bytes). Fallback: image/jpeg (legado).
+    return _sniff_mime(val) or 'image/jpeg'
 
 
 @admin_router.get('/admin/documentos')
@@ -1771,7 +1798,7 @@ async def get_documento_arquivo(cpf: str, tipo: str, token: str = '', user=None)
             content_type = header.split(':', 1)[1].split(';', 1)[0] or 'application/octet-stream'
         b64_only = body
     else:
-        content_type = 'image/jpeg'  # legado
+        content_type = _sniff_mime(b64) or 'image/jpeg'  # detecta pelo conteúdo; fallback legado
         b64_only = b64
 
     import base64
@@ -1822,7 +1849,8 @@ async def download_documentos_zip(payload: Dict[str, Any], user=Depends(require_
                     ext = _ext_for_mime(mime or 'image/jpeg')
                     b64_only = body
                 else:
-                    ext = 'jpg'
+                    mime = _sniff_mime(data)
+                    ext = _ext_for_mime(mime) if mime else 'jpg'
                     b64_only = data
                 try:
                     raw = base64.b64decode(b64_only)
